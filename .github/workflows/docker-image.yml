@@ -5,9 +5,18 @@ on:
       - master
     tags:
       - '*.*.*'
+  pull_request:
+    branches:
+      - master
 jobs:
   build:
+    name: Push Docker image to GHCR and DockerHub
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -15,22 +24,28 @@ jobs:
         id: meta-back
         uses: docker/metadata-action@v5
         with:
-          images: fabianmp/taiga-back
+          images: |
+            fabianmp/taiga-back,enable=${{ endsWith(github.ref, github.event.repository.default_branch) || github.ref_type == 'tag' }}
+            ghcr.io/fabianmp/taiga-back
           flavor: |
             suffix=-oidc
           tags: |
             type=raw,value=latest,enable=${{ endsWith(github.ref, github.event.repository.default_branch) }}
             type=semver,pattern={{raw}}
+            type=ref,event=pr
       - name: Docker meta frontend image
         id: meta-front
         uses: docker/metadata-action@v5
         with:
-          images: fabianmp/taiga-front
+          images: |
+            fabianmp/taiga-front,enable=${{ endsWith(github.ref, github.event.repository.default_branch) || github.ref_type == 'tag' }}
+            ghcr.io/fabianmp/taiga-front
           flavor: |
             suffix=-oidc
           tags: |
             type=raw,value=latest,enable=${{ endsWith(github.ref, github.event.repository.default_branch) }}
             type=semver,pattern={{raw}}
+            type=ref,event=pr
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Log into DockerHub
@@ -38,6 +53,12 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build and push backend image
         uses: docker/build-push-action@v5
         with:
