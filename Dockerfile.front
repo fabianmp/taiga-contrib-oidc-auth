@@ -1,4 +1,4 @@
-FROM node:21-alpine3.19 as build
+FROM node:21-alpine3.19 AS build
 
 WORKDIR /tmp/taiga-contrib-oidc-auth
 COPY --chown=taiga:taiga ./front /tmp/taiga-contrib-oidc-auth
@@ -7,7 +7,7 @@ RUN npm install
 RUN npx gulp build
 
 
-FROM taigaio/taiga-front:6.7.1
+FROM ghcr.io/fabianmp/taiga-front:6.8.1-fabianmp.0.1.0
 
 COPY --from=build --chown=taiga:taiga /tmp/taiga-contrib-oidc-auth/dist /usr/share/nginx/html/plugins/oidc-auth
 

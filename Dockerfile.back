@@ -1,4 +1,4 @@
-FROM taigaio/taiga-back:6.7.1
+FROM taigaio/taiga-back:6.8.1
 
 COPY --chown=taiga:taiga ./back /tmp/taiga-contrib-oidc-auth
 RUN pip install /tmp/taiga-contrib-oidc-auth && \
