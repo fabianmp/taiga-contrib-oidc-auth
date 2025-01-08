@@ -59,3 +59,12 @@ OIDC_CLAIM_AUTHDATA="sub"  # claim used to identify OAuth users
 OIDC_CLAIM_EMAIL="email"  # claim containing user's e-mail address
 OIDC_CLAIM_FULLNAME="name"  # claim containing user's full name
 ```
+
+
+## Configuration for your IDP
+
+This plugin uses [mozilla_django_oidc](https://github.com/mozilla/mozilla-django-oidc).
+As such, the following attributes are important for your OAuth2.0 client:
+
+ * post_login_redirect_uris: Should be `https://YOUR-TAIGA-INSTANCE/api/oidc/callback/` (note the trailing slash!)
+ * token_endpoint_auth_method: Should be `client_secret_post` (not client_secret_basic) (unless you are using [`OIDC_TOKEN_USE_BASIC_AUTH=True`](https://github.com/mozilla/mozilla-django-oidc/blob/2c2334fdc9b2fc72a492b5f0e990b4c30de68363/mozilla_django_oidc/auth.py#L236C31-L236C56))
