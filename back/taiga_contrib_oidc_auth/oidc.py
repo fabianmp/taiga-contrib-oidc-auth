@@ -20,6 +20,7 @@ from django.apps import apps
 from mozilla_django_oidc.auth import OIDCAuthenticationBackend
 from taiga.auth.services import send_register_email
 from taiga.auth.signals import user_registered as user_registered_signal
+from taiga.base import exceptions as exc
 from taiga.base.utils.slug import slugify
 
 
@@ -79,16 +80,19 @@ class TaigaOIDCAuthenticationBackend(OIDCAuthenticationBackend):
                     user=user, key=self.AUTHDATA_KEY, value=auth_id, extra={}
                 )
             except self.UserModel.DoesNotExist:
-                # Create a new user
-                user = self.UserModel.objects.create(
-                    email=email, username=username, full_name=full_name
-                )
-                AuthData.objects.create(
-                    user=user, key=self.AUTHDATA_KEY, value=auth_id, extra={}
-                )
+                if os.getenv("PUBLIC_REGISTER_ENABLED", False) == "True":
+                    # Create a new user
+                    user = self.UserModel.objects.create(
+                        email=email, username=username, full_name=full_name
+                    )
+                    AuthData.objects.create(
+                        user=user, key=self.AUTHDATA_KEY, value=auth_id, extra={}
+                    )
 
-                send_register_email(user)
-                user_registered_signal.send(sender=self.UserModel, user=user)
+                    send_register_email(user)
+                    user_registered_signal.send(sender=self.UserModel, user=user)
+                else:
+                    raise exc.IntegrityError("Sorry, was unable to locate user and registrations have been disabled by the Administrator")
 
         return user
 
